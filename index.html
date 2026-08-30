@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式 iPad 數位學習主畫面 v4</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        body {
+            background-color: #0b0518;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* iPad 外殼模擬 */
+        .ipad-container {
+            width: 1024px;
+            height: 768px;
+            background: #1e1e24;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 0 2px 2px rgba(255, 255, 255, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 4px solid #2d2d35;
+        }
+
+        /* 螢幕區域 */
+        .ipad-screen {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 滑動分頁容器 */
+        .pages-slider {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .page-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .page-view.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        /* 頁面切換位置 */
+        .page-view.left-out {
+            transform: translateX(-100%);
+        }
+
+        .page-view.right-out {
+            transform: translateX(100%);
+        }
+
+        /* 熱區 (Hotspot) 基礎樣式 */
+        .hotspot {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0); /* 預設透明 */
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        /* 點擊時有微微的 iOS 暗色遮罩反饋 */
+        .hotspot:active {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(0.96);
+        }
+
+        /* 導覽箭頭樣式 */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 50;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .nav-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.75);
+            transform: translateY(-50%) scale(1.08);
+        }
+
+        .nav-arrow:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .nav-arrow.left {
+            left: 20px;
+        }
+
+        .nav-arrow.right {
+            right: 20px;
+        }
+
+        .nav-arrow svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-arrow.disabled {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 資料夾全螢幕/滿版覆蓋層 */
+        .folder-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .folder-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* 關閉按鈕區域（點擊非 app 熱區則關閉資料夾） */
+        .folder-close-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 101;
+        }
+
+        /* 資料夾內的 app 熱區，權限高於關閉區域 */
+        .folder-hotspot {
+            position: absolute;
+            z-index: 102;
+            cursor: pointer;
+            border-radius: 16px;
+            background-color: rgba(255, 255, 255, 0);
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .folder-hotspot:active {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(0.96);
+        }
+
+        /* 指示點 */
+        .page-dots {
+            position: absolute;
+            bottom: 15.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .dot.active {
+            background: #fff;
+            transform: scale(1.2);
+        }
+
+        /* Fallback HTML 資料夾樣式 */
+        .fallback-folder-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 88%;
+            height: 74%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 36px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            z-index: 110;
+            box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .folder-overlay.active .fallback-folder-box {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .fallback-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .fallback-grid-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .fallback-grid-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .fallback-grid-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .fallback-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            justify-items: center;
+        }
+
+        .fallback-app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            width: 100px;
+            transition: transform 0.15s ease;
+        }
+
+        .fallback-app:active {
+            transform: scale(0.92);
+        }
+
+        .fallback-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .fallback-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ipad-container">
+    <div class="ipad-screen">
+        
+        <!-- 導覽箭頭：左 -->
+        <div class="nav-arrow left disabled" id="arrowLeft" onclick="prevPage()">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </div>
+
+        <!-- 導覽箭頭：右 -->
+        <div class="nav-arrow right" id="arrowRight" onclick="nextPage()">
+            <svg viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </div>
+
+        <!-- 頁面指示點 -->
+        <div class="page-dots">
+            <div class="dot active" id="dot1"></div>
+            <div class="dot" id="dot2"></div>
+        </div>
+
+        <!-- 主滑動視窗 -->
+        <div class="pages-slider">
+            
+            <!-- 第一頁 (以 001.png 作為背景圖檔) -->
+            <div class="page-view active" id="page1" style="background-image: url('001.png');">
+                
+                <!-- 13 個資料夾分類熱區 -->
+                <!-- 第一排 -->
+                <div class="hotspot" style="left: 12.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openFallbackFolder('moe')" title="教育部專區"></div>
+                <div class="hotspot" style="left: 25.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openFallbackFolder('apple')" title="APPLE"></div>
+                <div class="hotspot" style="left: 39.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('003.png', 'dictionary')" title="字典辭典"></div>
+                <div class="hotspot" style="left: 52.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('004.png', 'bopomo')" title="學注音"></div>
+                <div class="hotspot" style="left: 66.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('005.png', 'reading')" title="國語文閱讀"></div>
+                <div class="hotspot" style="left: 79.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('006.png', 'interactive')" title="互動與答題"></div>
+
+                <!-- 第二排 -->
+                <div class="hotspot" style="left: 12.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('007.png', 'science')" title="自然科學"></div>
+                <div class="hotspot" style="left: 25.5%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('008.png', 'taiwanese')" title="學台語"></div>
+                <div class="hotspot" style="left: 39.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('009.png', 'english')" title="學英語"></div>
+                <div class="hotspot" style="left: 52.5%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('010.png', 'media')" title="影音繪圖"></div>
+                <div class="hotspot" style="left: 66.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('011.png', 'office')" title="文書簡報"></div>
+                <div class="hotspot" style="left: 79.5%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('012.png', 'tools')" title="其他工具"></div>
+
+                <!-- 第三排 -->
+                <div class="hotspot" style="left: 12.0%; top: 37.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('013.png', 'search')" title="查資料"></div>
+
+                <!-- 共同 Dock 欄熱區 (第一頁) -->
+                <div class="hotspot" style="left: 4.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
+                <div class="hotspot" style="left: 13.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
+                <div class="hotspot" style="left: 22.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="設定"></div>
+                <div class="hotspot" style="left: 31.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
+                <div class="hotspot" style="left: 40.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
+                <div class="hotspot" style="left: 49.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.coolenglish.edu.tw/')" title="CoolEnglish酷英"></div>
+                <div class="hotspot" style="left: 60.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
+                <div class="hotspot" style="left: 69.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
+                <div class="hotspot" style="left: 78.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="Teacher"></div>
+                <div class="hotspot" style="left: 87.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
+
+            </div>
+
+            <!-- 第二頁 (以 002.png 作為背景圖檔) -->
+            <div class="page-view right-out" id="page2" style="background-image: url('002.png');">
+                
+                <!-- 第一排 App -->
+                <div class="hotspot" style="left: 12.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad997db12d/ipados')" title="相機"></div>
+                <div class="hotspot" style="left: 25.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
+                <div class="hotspot" style="left: 39.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="檔案"></div>
+                <div class="hotspot" style="left: 52.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://gitmind.com/')" title="GitMind"></div>
+                <div class="hotspot" style="left: 66.0%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="照片"></div>
+                <div class="hotspot" style="left: 79.5%; top: 9.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
+
+                <!-- 第二排 App -->
+                <div class="hotspot" style="left: 12.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="Teacher"></div>
+                <div class="hotspot" style="left: 25.5%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://play.google.com/store/apps')" title="每日腦點心"></div>
+                <div class="hotspot" style="left: 39.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="課堂"></div>
+                <div class="hotspot" style="left: 52.5%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad50ea26fc/ipados')" title="放大鏡"></div>
+                <div class="hotspot" style="left: 66.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://chatgpt.com/')" title="ChatGPT"></div>
+
+                <!-- 共同 Dock 欄熱區 (第二頁) -->
+                <div class="hotspot" style="left: 4.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
+                <div class="hotspot" style="left: 13.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
+                <div class="hotspot" style="left: 22.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="設定"></div>
+                <div class="hotspot" style="left: 31.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
+                <div class="hotspot" style="left: 40.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
+                <div class="hotspot" style="left: 49.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.coolenglish.edu.tw/')" title="CoolEnglish酷英"></div>
+                <div class="hotspot" style="left: 60.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
+                <div class="hotspot" style="left: 69.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
+                <div class="hotspot" style="left: 78.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="Teacher"></div>
+                <div class="hotspot" style="left: 87.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- 全螢幕圖檔資料夾展開覆蓋層 (4x4 完美對齊) -->
+<div class="folder-overlay" id="imgFolderOverlay">
+    <div class="folder-close-trigger" onclick="closeImgFolder()"></div>
+    <div id="imgFolderAppContainer"></div>
+</div>
+
+<!-- Fallback HTML 彈出式覆蓋層 -->
+<div class="folder-overlay" id="fallbackFolderOverlay">
+    <div class="folder-close-trigger" onclick="closeFallbackFolder()"></div>
+    <div class="fallback-folder-box" id="fallbackBox">
+        <div class="fallback-title" id="fallbackTitle">資料夾</div>
+        <div class="fallback-grid-container">
+            <div class="fallback-grid" id="fallbackGrid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 精準的 4x4 欄位 Y 與 X 百分比 (適用於 iPad 原圖 1024x768 展開資料夾)
+    // 欄位 X 百分比：Col 1: 14.0%, Col 2: 33.0%, Col 3: 52.0%, Col 4: 71.0%
+    // 欄位 Y 百分比：Row 1: 24.5%, Row 2: 41.0%, Row 3: 57.5%, Row 4: 74.0%
+    // 每個熱區寬高：寬 15.0%, 高 14.5% (完美包覆圖示且留有些微空隙，解決點擊不易或偏位問題)
+
+    const folderAppsData = {
+        "dictionary": [
+            { name: "國語辭典簡編本", url: "https://dict.concised.moe.edu.tw/search.jsp?md=1", x: 14.0, y: 24.5 },
+            { name: "國語小字典", url: "https://dict.mini.moe.edu.tw/", x: 33.0, y: 24.5 },
+            { name: "國語辭典修正本", url: "https://dict.revised.moe.edu.tw/search.jsp?md=1", x: 52.0, y: 24.5 },
+            { name: "萌典", url: "https://apps.apple.com/tw/app/id599426913", x: 71.0, y: 24.5 }
+        ],
+        "bopomo": [
+            { name: "翰林注音符號發音網", url: "https://kidsvideo1.hle.com.tw", x: 14.0, y: 24.5 },
+            { name: "國語日報注音-聽音練習", url: "https://www.mdnkids.com/bopomo/", x: 33.0, y: 24.5 },
+            { name: "注音冒險王", url: "https://apps.apple.com/tw/app/id1114441545", x: 52.0, y: 24.5 },
+            { name: "注音學習卡", url: "https://apps.apple.com/tw/app/id1455088214", x: 71.0, y: 24.5 },
+            { name: "翰林趣學注音", url: "https://apps.apple.com/tw/app/id1527581232", x: 14.0, y: 41.0 }
+        ],
+        "reading": [
+            { name: "人間福報", url: "https://www.merit-times.com/newsepaper/", x: 14.0, y: 24.5 },
+            { name: "國語日報雲閱讀", url: "https://mdnereading.mdnkids.com/", x: 33.0, y: 24.5 },
+            { name: "品學堂閱讀理解", url: "https://learning.wisdomhall.com.tw", x: 52.0, y: 24.5 },
+            { name: "作文易學堂", url: "https://www.ezwriting.com.tw/", x: 71.0, y: 24.5 },
+            { name: "收割季節-國字學習", url: "https://apps.apple.com/tw/app/id1454522438", x: 14.0, y: 41.0 },
+            { name: "漢字解碼", url: "https://apps.apple.com/tw/app/id1534017366", x: 33.0, y: 41.0 },
+            { name: "繁體字帖", url: "https://apps.apple.com/tw/app/id1439268310", x: 52.0, y: 41.0 },
+            { name: "聽說讀寫 小奇兵", url: "https://apps.apple.com/tw/app/id1354388435", x: 71.0, y: 41.0 },
+            { name: "國語日報", url: "https://www.mdnkids.com", x: 14.0, y: 57.5 }
+        ],
+        "interactive": [
+            { name: "Wayground(Quizizz)", url: "https://wayground.com/join/", x: 14.0, y: 24.5 },
+            { name: "康軒線上答題", url: "https://quiz.knsh.com.tw/students/query", x: 33.0, y: 24.5 },
+            { name: "南一線上答題", url: "https://oneexam.oneclass.com.tw/", x: 52.0, y: 24.5 },
+            { name: "翰林線上答題", url: "https://qt.hle.com.tw/login.html", x: 71.0, y: 24.5 },
+            { name: "PaGamO網頁版", url: "https://www.pagamo.org/", x: 14.0, y: 41.0 },
+            { name: "PaGamO", url: "https://apps.apple.com/tw/app/pagamo/id1044941916", x: 33.0, y: 41.0 },
+            { name: "AILead365國小", url: "https://ptc.ailead365.com", x: 52.0, y: 41.0 },
+            { name: "LoiLoNote School", url: "https://apps.apple.com/tw/app/loilonote-school/id794951478", x: 71.0, y: 41.0 },
+            { name: "學習吧", url: "https://www.learnmode.net/home/", x: 14.0, y: 57.5 },
+            { name: "Slido", url: "https://www.slido.com/", x: 33.0, y: 57.5 },
+            { name: "Google Classroom", url: "https://classroom.google.com", x: 52.0, y: 57.5 }
+        ],
+        "science": [
+            { name: "現代指南針", url: "https://apps.apple.com/tw/app/id1450239023", x: 14.0, y: 24.5 },
+            { name: "月相盈虧與月球相位預測", url: "https://apps.apple.com/tw/app/id1112674391", x: 33.0, y: 24.5 },
+            { name: "中央氣象局W - 生活氣象", url: "https://apps.apple.com/tw/app/id513498858", x: 52.0, y: 24.5 },
+            { name: "Stellarium Mobile - 星圖", url: "https://apps.apple.com/tw/app/stellarium-mobile-star-map/id1458716890", x: 71.0, y: 24.5 },
+            { name: "Star Walk 2 Plus: 觀星的應用 AR", url: "https://apps.apple.com/tw/app/star-walk-2-ads-night-sky/id892279831", x: 14.0, y: 41.0 },
+            { name: "Solar Walk Lite: 太陽系和宇宙模擬器 3D", url: "https://apps.apple.com/tw/app/solar-walk-lite-3d-planet/id974640822", x: 33.0, y: 41.0 },
+            { name: "PictureThis - 形色識花識別植物", url: "https://apps.apple.com/tw/app/picturethis-plant-identifier/id1252497129", x: 52.0, y: 41.0 },
+            { name: "平水尺", url: "https://apps.apple.com/tw/app/id468512143", x: 71.0, y: 41.0 },
+            { name: "指南針 HD", url: "https://apps.apple.com/tw/app/compass-hd-free/id512411995", x: 14.0, y: 57.5 },
+            { name: "認識昆蟲", url: "googlechrome://icontent.nkps.tp.edu.tw/insectinfo/index.htm", x: 33.0, y: 57.5 }
+        ],
+        "taiwanese": [
+            { name: "呆呆學台語 - 台灣料理", url: "https://apps.apple.com/tw/app/id1527581232", x: 14.0, y: 24.5 },
+            { name: "台灣達歡喜學台語：看圖臆謎猜", url: "https://apps.apple.com/tw/app/id1454522438", x: 33.0, y: 24.5 },
+            { name: "iTaigi愛台語", url: "https://itaigi.tw", x: 52.0, y: 24.5 }
+        ],
+        "english": [
+            { name: "ABC 英文字母學習卡", url: "https://apps.apple.com/tw/app/abc-english-alphabet-learning/id1455088214", x: 14.0, y: 24.5 },
+            { name: "字母學習，由Montessorium", url: "https://apps.apple.com/tw/app/intro-to-letters-by-montessorium/id387232375", x: 33.0, y: 24.5 },
+            { name: "小小單字王", url: "https://apps.apple.com/tw/app/id1435272027", x: 52.0, y: 24.5 },
+            { name: "sensay 英語口說", url: "https://www.oksensay.com/zh/", x: 71.0, y: 24.5 }
+        ],
+        "media": [
+            { name: "Canva：設計、照片和影片", url: "https://apps.apple.com/tw/app/canva-design-photo-video/id897446215", x: 14.0, y: 24.5 },
+            { name: "Sketchbook?", url: "https://apps.apple.com/tw/app/sketchbook/id896189574", x: 33.0, y: 24.5 },
+            { name: "鋼琴", url: "https://apps.apple.com/tw/app/id1114251235", x: 52.0, y: 24.5 },
+            { name: "Clips", url: "https://apps.apple.com/tw/app/clips/id1212694160", x: 71.0, y: 24.5 },
+            { name: "Procreate", url: "https://apps.apple.com/tw/app/procreate/id425073498", x: 14.0, y: 41.0 },
+            { name: "Ellou - 寶寶畫畫遊戲 - 兒童塗鴉畫板", url: "https://apps.apple.com/tw/app/id1605335520", x: 33.0, y: 41.0 },
+            { name: "MediBang Paint for iPad", url: "https://apps.apple.com/tw/app/medibang-paint/id1031158715", x: 52.0, y: 41.0 },
+            { name: "Podcasts", url: "https://apps.apple.com/tw/app/apple-podcasts/id525453029", x: 71.0, y: 41.0 }
+        ],
+        "office": [
+            { name: "Keynote", url: "https://apps.apple.com/tw/app/keynote/id361285480", x: 14.0, y: 24.5 },
+            { name: "Pages", url: "https://apps.apple.com/tw/app/pages/id361309726", x: 33.0, y: 24.5 },
+            { name: "Freeform", url: "https://apps.apple.com/tw/app/freeform/id1625211910", x: 52.0, y: 24.5 },
+            { name: "Notes", url: "https://apps.apple.com/tw/app/notes/id1114561035", x: 71.0, y: 24.5 }
+        ],
+        "tools": [
+            { name: "Calculator", url: "https://apps.apple.com/tw/app/calculator/id1067455431", x: 14.0, y: 24.5 },
+            { name: "Translate", url: "https://apps.apple.com/tw/app/translate/id1514784616", x: 33.0, y: 24.5 },
+            { name: "Voice Memos", url: "https://apps.apple.com/tw/app/voice-memos/id1105855019", x: 52.0, y: 24.5 },
+            { name: "Measure", url: "https://apps.apple.com/tw/app/measure/id1380582676", x: 71.0, y: 24.5 },
+            { name: "Weather", url: "https://apps.apple.com/tw/app/weather/id1065662711", x: 14.0, y: 41.0 },
+            { name: "Apple Maps", url: "https://apps.apple.com/tw/app/apple-maps/id915056765", x: 33.0, y: 41.0 }
+        ],
+        "search": [
+            { name: "維基百科", url: "https://zh.wikipedia.org/w/index.php?search=&title=Special%3ASearch&variant=zh-tw", x: 14.0, y: 24.5 },
+            { name: "Ai查資料", url: "https://padlet.com/ptcedu/ai-ld8jn118te042n98", x: 33.0, y: 24.5 }
+        ]
+    };
+
+    // 教育部專區、APPLE、Google & 課堂工具
+    const fallbackFolders = {
+        "moe": {
+            title: "教育部專區",
+            apps: [
+                { name: "教育雲", url: "https://cloud.edu.tw/", icon: "☁️", bg: "#0ea5e9" },
+                { name: "教育部全球網", url: "https://www.edu.tw/", icon: "🏫", bg: "#1e3a8a" },
+                { name: "因材網 SDGs", url: "https://adl.edu.tw/sdgs/", icon: "🌱", bg: "#10b981" },
+                { name: "臺灣手語線上辭典", url: "https://special.moe.gov.tw/signlanguage", icon: "🤟", bg: "#8b5cf6" },
+                { name: "教育百科", url: "https://pedia.cloud.edu.tw/", icon: "📖", bg: "#f59e0b" },
+                { name: "教育大市集", url: "https://market.cloud.edu.tw/", icon: "🛍️", bg: "#ec4899" },
+                { name: "美感教育資源網", url: "https://aew.moe.edu.tw/#/", icon: "🎨", bg: "#3b82f6" },
+                { name: "課程教學引導網", url: "https://cirn.moe.edu.tw/Facet/Home/index.aspx?HtmlName=Home", icon: "🧭", bg: "#14b8a6" },
+                { name: "性別平等教育網", url: "https://www.gender.edu.tw/web/index.php/home", icon: "🌈", bg: "#f43f5e" },
+                { name: "教育媒體影音", url: "https://video.cloud.edu.tw/", icon: "📹", bg: "#a855f7" },
+                { name: "因雄崛起", url: "https://adl.edu.tw/hero/", icon: "🛡️", bg: "#ea580c" },
+                { name: "E-game 學習平台", url: "https://www.egame.kh.edu.tw/login", icon: "🕹️", bg: "#06b6d4" },
+                { name: "因材網知識樹", url: "https://adl.edu.tw/trees/", icon: "🌳", bg: "#16a34a" },
+                { name: "因材網數學遊戲", url: "https://adl.edu.tw/mathgame/grade/4", icon: "🔢", bg: "#2563eb" },
+                { name: "因材網 TWA", url: "https://adl.edu.tw/twa/", icon: "🤖", bg: "#4f46e5" },
+                { name: "教育部磨課師", url: "https://moocs.moe.edu.tw/moocs/#/home", icon: "🎓", bg: "#4b5563" },
+                { name: "資訊素養與認知", url: "https://eliteracy.edu.tw/", icon: "💻", bg: "#111827" },
+                { name: "防災教育資訊網", url: "https://disaster.moe.edu.tw/", icon: "🚨", bg: "#dc2626" },
+                { name: "戶外教育資源網", url: "https://outdoor.moe.edu.tw/", icon: "⛺", bg: "#65a30d" },
+                { name: "運算思維推動計畫", url: "https://compthinking.csie.ntnu.edu.tw/", icon: "🧩", bg: "#0d9488" }
+            ]
+        },
+        "apple": {
+            title: "APPLE",
+            apps: [
+                { name: "App Store", url: "https://www.apple.com/app-store/", icon: "🅰️", bg: "#007aff" },
+                { name: "Classroom", url: "https://www.apple.com/education/k12/classroom/", icon: "🏫", bg: "#f59e0b" },
+                { name: "Pages", url: "https://www.apple.com/pages/", icon: "📝", bg: "#f97316" },
+                { name: "Keynote", url: "https://www.apple.com/keynote/", icon: "📊", bg: "#8b5cf6" },
+                { name: "iTunes Store", url: "https://apps.apple.com/tw/app/itunes-store/id915056765", icon: "🎵", bg: "#fc3c44" },
+                { name: "Apple Books", url: "https://apps.apple.com/tw/app/apple-books/id364709193", icon: "📚", bg: "#fca311" },
+                { name: "iMovie", url: "https://apps.apple.com/tw/app/imovie/id377298193", icon: "🎥", bg: "#9b59b6" },
+                { name: "Shortcuts", url: "https://apps.apple.com/tw/app/shortcuts/id1462430514", icon: "⚡", bg: "#e91e63" },
+                { name: "Reminders", url: "https://apps.apple.com/tw/app/reminders/id1108187841", icon: "🔔", bg: "#ff9500" },
+                { name: "Calendar", url: "https://apps.apple.com/tw/app/calendar/id1108185179", icon: "📅", bg: "#ff3b30" }
+            ]
+        },
+        "google": {
+            title: "Google & 課堂工具",
+            apps: [
+                { name: "Chrome", url: "https://www.google.com/chrome/", icon: "🌐", bg: "#e67e22" },
+                { name: "雲端硬碟", url: "https://drive.google.com/", icon: "💾", bg: "#27ae60" },
+                { name: "文件", url: "https://docs.google.com/", icon: "📝", bg: "#2980b9" },
+                { name: "試算表", url: "https://sheets.google.com/", icon: "📊", bg: "#2ecc71" },
+                { name: "Google Classroom", url: "https://classroom.google.com", icon: "🏫", bg: "#10ac84" },
+                { name: "Webex", url: "https://webex.com", icon: "📹", bg: "#0078d4" },
+                { name: "Google Meet", url: "https://meet.google.com", icon: "👥", bg: "#0f9d58" },
+                { name: "Microsoft Teams", url: "https://teams.microsoft.com", icon: "💬", bg: "#6264a7" }
+            ]
+        }
+    };
+
+    let currentPage = 1;
+
+    // 1. 頁面滑動控制 (利用 transform 達到極致順暢)
+    function switchPage(pageIndex) {
+        const p1 = document.getElementById("page1");
+        const p2 = document.getElementById("page2");
+        const dot1 = document.getElementById("dot1");
+        const dot2 = document.getElementById("dot2");
+        const arrowLeft = document.getElementById("arrowLeft");
+        const arrowRight = document.getElementById("arrowRight");
+
+        currentPage = pageIndex;
+
+        if (pageIndex === 1) {
+            p1.className = "page-view active";
+            p2.className = "page-view right-out";
+            dot1.classList.add("active");
+            dot2.classList.remove("active");
+            arrowLeft.classList.add("disabled");
+            arrowRight.classList.remove("disabled");
+        } else {
+            p1.className = "page-view left-out";
+            p2.className = "page-view active";
+            dot1.classList.remove("active");
+            dot2.classList.add("active");
+            arrowLeft.classList.remove("disabled");
+            arrowRight.classList.add("disabled");
+        }
+    }
+
+    function nextPage() {
+        if (currentPage === 1) switchPage(2);
+    }
+
+    function prevPage() {
+        if (currentPage === 2) switchPage(1);
+    }
+
+    // 2. 打開圖檔資料夾覆蓋層
+    function openImgFolder(imgSrc, folderKey) {
+        const overlay = document.getElementById("imgFolderOverlay");
+        const appContainer = document.getElementById("imgFolderAppContainer");
+
+        // 設置該資料夾對應的截圖背景
+        overlay.style.backgroundImage = `url('${imgSrc}')`;
+        appContainer.innerHTML = "";
+
+        // 獲取此資料夾內對應的 app 熱區與連結
+        const apps = folderAppsData[folderKey];
+        if (apps) {
+            apps.forEach(app => {
+                const hotspot = document.createElement("div");
+                hotspot.className = "folder-hotspot";
+                // 完美包覆：寬 15.0%, 高 14.5% 
+                hotspot.style.left = `${app.x}%`;
+                hotspot.style.top = `${app.y}%`;
+                hotspot.style.width = "15.0%";
+                hotspot.style.height = "14.5%";
+                hotspot.title = app.name;
+                
+                hotspot.onclick = (e) => {
+                    e.stopPropagation(); // 阻止背景點擊關閉事件
+                    openUrl(app.url);
+                };
+
+                appContainer.appendChild(hotspot);
+            });
+        }
+
+        overlay.classList.add("active");
+    }
+
+    function closeImgFolder() {
+        const overlay = document.getElementById("imgFolderOverlay");
+        overlay.classList.remove("active");
+    }
+
+    // 3. 打開 Fallback CSS 彈出式資料夾 (教育部專區、APPLE、Google工具)
+    function openFallbackFolder(key) {
+        const overlay = document.getElementById("fallbackFolderOverlay");
+        const titleEl = document.getElementById("fallbackTitle");
+        const gridEl = document.getElementById("fallbackGrid");
+
+        const data = fallbackFolders[key];
+        if (!data) return;
+
+        titleEl.innerText = data.title;
+        gridEl.innerHTML = "";
+
+        data.apps.forEach(app => {
+            const appEl = document.createElement("div");
+            appEl.className = "fallback-app";
+            appEl.onclick = (e) => {
+                e.stopPropagation();
+                openUrl(app.url);
+            };
+
+            appEl.innerHTML = `
+                <div class="fallback-icon" style="background: ${app.bg}">
+                    ${app.icon}
+                </div>
+                <div class="fallback-label">${app.name}</div>
+            `;
+            gridEl.appendChild(appEl);
+        });
+
+        overlay.classList.add("active");
+    }
+
+    function closeFallbackFolder() {
+        const overlay = document.getElementById("fallbackFolderOverlay");
+        overlay.classList.remove("active");
+    }
+
+    // 4. 開新分頁連到外部網站
+    function openUrl(url) {
+        window.open(url, "_blank");
+    }
+
+    // 行動裝置滑動手勢支援 (左右 Swift)
+    let startX = 0;
+    const sliderContainer = document.querySelector(".ipad-screen");
+
+    sliderContainer.addEventListener("touchstart", (e) => {
+        startX = e.touches[0].clientX;
+    }, {passive: true});
+
+    sliderContainer.addEventListener("touchend", (e) => {
+        let diffX = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diffX) > 50) {
+            const imgOverlayActive = document.getElementById("imgFolderOverlay").classList.contains("active");
+            const fallbackOverlayActive = document.getElementById("fallbackFolderOverlay").classList.contains("active");
+            if (!imgOverlayActive && !fallbackOverlayActive) {
+                if (diffX > 0 && currentPage === 2) {
+                    switchPage(1);
+                } else if (diffX < 0 && currentPage === 1) {
+                    switchPage(2);
+                }
+            }
+        }
+    }, {passive: true});
+</script>
+
+</body>
+</html>
