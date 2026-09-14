@@ -20,12 +20,14 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow: auto; /* 已修改：允許放大時顯示捲軸 */
+            padding: 20px;   /* 已新增：放大時避免貼邊 */
             color: #fff;
         }
 
         /* iPad 外殼模擬 */
         .ipad-container {
+            margin: auto;   /* 已新增：確保放大與滾動時正常垂直置中 */
             width: 1024px;
             height: 768px;
             background: #1e1e24;
