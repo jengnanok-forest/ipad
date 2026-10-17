@@ -20,14 +20,14 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: auto; /* 已修改：允許放大時顯示捲軸 */
-            padding: 20px;   /* 已新增：放大時避免貼邊 */
+            overflow: auto;
+            padding: 20px;
             color: #fff;
         }
 
         /* iPad 外殼模擬 */
         .ipad-container {
-            margin: auto;   /* 已新增：確保放大與滾動時正常垂直置中 */
+            margin: auto;
             width: 1024px;
             height: 768px;
             background: #1e1e24;
@@ -94,7 +94,7 @@
             position: absolute;
             cursor: pointer;
             border-radius: 12px;
-            background-color: rgba(255, 255, 255, 0); /* 預設透明 */
+            background-color: rgba(255, 255, 255, 0);
             transition: background-color 0.15s ease, transform 0.15s ease;
         }
 
@@ -205,7 +205,7 @@
         /* 指示點 */
         .page-dots {
             position: absolute;
-            bottom: 15.5%;
+            bottom: 18.5%;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -376,16 +376,16 @@
                 <div class="hotspot" style="left: 12.0%; top: 37.0%; width: 10.5%; height: 13.5%;" onclick="openImgFolder('013.png', 'search')" title="查資料"></div>
 
                 <!-- 共同 Dock 欄熱區 (第一頁) -->
-                <div class="hotspot" style="left: 4.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
-                <div class="hotspot" style="left: 13.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
-                <div class="hotspot" style="left: 22.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="設定"></div>
-                <div class="hotspot" style="left: 31.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
-                <div class="hotspot" style="left: 40.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
-                <div class="hotspot" style="left: 49.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.coolenglish.edu.tw/')" title="CoolEnglish酷英"></div>
-                <div class="hotspot" style="left: 60.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
-                <div class="hotspot" style="left: 69.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
-                <div class="hotspot" style="left: 78.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="Teacher"></div>
-                <div class="hotspot" style="left: 87.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
+                <div class="hotspot" style="left: 21.0%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
+                <div class="hotspot" style="left: 27.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
+                <div class="hotspot" style="left: 33.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://sites.google.com/go.edu.tw/ipadsetup/%E9%A6%96%E9%A0%81')" title="設定"></div>
+                <div class="hotspot" style="left: 40.2%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
+                <div class="hotspot" style="left: 46.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
+                <div class="hotspot" style="left: 52.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.startpage.com/sp/search?language=chinese_traditional&segment=startpage.brave&query=')" title="查資料"></div>
+                <!-- 分隔線右側 -->
+                <div class="hotspot" style="left: 60.1%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
+                <div class="hotspot" style="left: 66.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
+                <div class="hotspot" style="left: 72.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
 
             </div>
 
@@ -408,16 +408,16 @@
                 <div class="hotspot" style="left: 66.0%; top: 23.0%; width: 10.5%; height: 13.5%;" onclick="openUrl('https://chatgpt.com/')" title="ChatGPT"></div>
 
                 <!-- 共同 Dock 欄熱區 (第二頁) -->
-                <div class="hotspot" style="left: 4.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
-                <div class="hotspot" style="left: 13.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
-                <div class="hotspot" style="left: 22.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://support.apple.com/guide/ipad/ipad9a74c605/ipados')" title="設定"></div>
-                <div class="hotspot" style="left: 31.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
-                <div class="hotspot" style="left: 40.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
-                <div class="hotspot" style="left: 49.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.coolenglish.edu.tw/')" title="CoolEnglish酷英"></div>
-                <div class="hotspot" style="left: 60.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
-                <div class="hotspot" style="left: 69.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
-                <div class="hotspot" style="left: 78.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openUrl('https://www.apple.com/education/k12/classroom/')" title="Teacher"></div>
-                <div class="hotspot" style="left: 87.8%; top: 83.5%; width: 7.6%; height: 11.5%;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
+                <div class="hotspot" style="left: 21.0%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.jsps.ptc.edu.tw/nss/p/index')" title="建興國小"></div>
+                <div class="hotspot" style="left: 27.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://kahoot.it/')" title="Kahoot網頁版"></div>
+                <div class="hotspot" style="left: 33.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://sites.google.com/go.edu.tw/ipadsetup/%E9%A6%96%E9%A0%81')" title="設定"></div>
+                <div class="hotspot" style="left: 40.2%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.junyiacademy.org/')" title="均一"></div>
+                <div class="hotspot" style="left: 46.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://adl.edu.tw/')" title="因材網"></div>
+                <div class="hotspot" style="left: 52.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.startpage.com/sp/search?language=chinese_traditional&segment=startpage.brave&query=')" title="查資料"></div>
+                <!-- 分隔線右側 -->
+                <div class="hotspot" style="left: 60.1%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.google.com/chrome/')" title="Chrome"></div>
+                <div class="hotspot" style="left: 66.5%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openUrl('https://www.apple.com/safari/')" title="Safari"></div>
+                <div class="hotspot" style="left: 72.8%; top: 83.2%; width: 5.8%; height: 12.0%; border-radius: 16px;" onclick="openFallbackFolder('google')" title="Google & 課堂工具"></div>
 
             </div>
 
@@ -444,11 +444,6 @@
 </div>
 
 <script>
-    // 精準的 4x4 欄位 Y 與 X 百分比 (適用於 iPad 原圖 1024x768 展開資料夾)
-    // 欄位 X 百分比：Col 1: 14.0%, Col 2: 33.0%, Col 3: 52.0%, Col 4: 71.0%
-    // 欄位 Y 百分比：Row 1: 24.5%, Row 2: 41.0%, Row 3: 57.5%, Row 4: 74.0%
-    // 每個熱區寬高：寬 15.0%, 高 14.5% (完美包覆圖示且留有些微空隙，解決點擊不易或偏位問題)
-
     const folderAppsData = {
         "dictionary": [
             { name: "國語辭典簡編本", url: "https://dict.concised.moe.edu.tw/search.jsp?md=1", x: 14.0, y: 24.5 },
@@ -540,7 +535,6 @@
         ]
     };
 
-    // 教育部專區、APPLE、Google & 課堂工具
     const fallbackFolders = {
         "moe": {
             title: "教育部專區",
@@ -599,7 +593,6 @@
 
     let currentPage = 1;
 
-    // 1. 頁面滑動控制 (利用 transform 達到極致順暢)
     function switchPage(pageIndex) {
         const p1 = document.getElementById("page1");
         const p2 = document.getElementById("page2");
@@ -635,22 +628,18 @@
         if (currentPage === 2) switchPage(1);
     }
 
-    // 2. 打開圖檔資料夾覆蓋層
     function openImgFolder(imgSrc, folderKey) {
         const overlay = document.getElementById("imgFolderOverlay");
         const appContainer = document.getElementById("imgFolderAppContainer");
 
-        // 設置該資料夾對應的截圖背景
         overlay.style.backgroundImage = `url('${imgSrc}')`;
         appContainer.innerHTML = "";
 
-        // 獲取此資料夾內對應的 app 熱區與連結
         const apps = folderAppsData[folderKey];
         if (apps) {
             apps.forEach(app => {
                 const hotspot = document.createElement("div");
                 hotspot.className = "folder-hotspot";
-                // 完美包覆：寬 15.0%, 高 14.5% 
                 hotspot.style.left = `${app.x}%`;
                 hotspot.style.top = `${app.y}%`;
                 hotspot.style.width = "15.0%";
@@ -658,7 +647,7 @@
                 hotspot.title = app.name;
                 
                 hotspot.onclick = (e) => {
-                    e.stopPropagation(); // 阻止背景點擊關閉事件
+                    e.stopPropagation();
                     openUrl(app.url);
                 };
 
@@ -674,7 +663,6 @@
         overlay.classList.remove("active");
     }
 
-    // 3. 打開 Fallback CSS 彈出式資料夾 (教育部專區、APPLE、Google工具)
     function openFallbackFolder(key) {
         const overlay = document.getElementById("fallbackFolderOverlay");
         const titleEl = document.getElementById("fallbackTitle");
@@ -711,12 +699,10 @@
         overlay.classList.remove("active");
     }
 
-    // 4. 開新分頁連到外部網站
     function openUrl(url) {
         window.open(url, "_blank");
     }
 
-    // 行動裝置滑動手勢支援 (左右 Swift)
     let startX = 0;
     const sliderContainer = document.querySelector(".ipad-screen");
 
